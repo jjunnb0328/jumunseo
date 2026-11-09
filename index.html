@@ -188,7 +188,19 @@
   .summary-row .qty { font-weight: 700; }
   .empty { color: var(--muted); text-align: center; padding: 16px 0; }
   .note { margin: 14px 0 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
-  #receipt { background: #ffffff; padding: 6px 2px 18px; }
+  #share-text-fallback {
+    width: 100%;
+    min-height: 140px;
+    margin-top: 12px;
+    padding: 12px;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    resize: vertical;
+  }
 
   @media (max-width: 420px) {
     body { padding: 16px 12px; }
@@ -228,18 +240,16 @@
     </section>
 
     <section id="summary-view" class="hidden">
-      <div id="receipt">
-        <h1>신청한 품목</h1>
-        <p class="desc">신청 내용을 확인해 주세요.</p>
-        <div id="summary-list"></div>
-      </div>
+      <h1>신청한 품목</h1>
+      <p class="desc">신청 내용을 확인해 주세요.</p>
+      <div id="summary-list"></div>
       <button type="button" id="edit-btn" class="secondary">수정하기</button>
       <button type="button" id="complete-btn" class="submit">완료</button>
       <p class="note hidden" id="complete-note"></p>
+      <textarea id="share-text-fallback" class="hidden" readonly></textarea>
     </section>
   </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
   const BUNJUNGI_VARIANTS = ["2구","3구","4구","5구","6구","7구","8구","9구","10구"];
   const BOILER_VARIANTS = ["2kw","3kw","4.5kw"];
@@ -454,65 +464,67 @@
 
   document.getElementById("edit-btn").addEventListener("click", function () {
     completeNote.classList.add("hidden");
+    shareFallback.classList.add("hidden");
     summaryView.classList.add("hidden");
     formView.classList.remove("hidden");
   });
 
   const completeBtn = document.getElementById("complete-btn");
-  const receiptEl = document.getElementById("receipt");
+  const shareFallback = document.getElementById("share-text-fallback");
 
   function showNote(text) {
     completeNote.textContent = text;
     completeNote.classList.remove("hidden");
   }
 
+  function buildShareText(header, order) {
+    const headerLines = headerRows(header).map(function (item) {
+      return item.label + ": " + item.value;
+    });
+    const itemLines = order.map(function (item) {
+      return item.label + ": " + item.qty + "개";
+    });
+    return ["[주문서]"].concat(headerLines).concat(itemLines).join("\n");
+  }
+
+  function showFallbackText(text) {
+    shareFallback.value = text;
+    shareFallback.classList.remove("hidden");
+    shareFallback.focus();
+    shareFallback.select();
+  }
+
   completeBtn.addEventListener("click", async function () {
-    if (typeof html2canvas === "undefined") {
-      showNote("이미지를 만드는 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.");
-      return;
-    }
+    const header = getHeader();
+    const order = getOrder();
+    const text = buildShareText(header, order);
 
-    completeBtn.disabled = true;
-    completeBtn.textContent = "이미지 만드는 중...";
     completeNote.classList.add("hidden");
+    shareFallback.classList.add("hidden");
 
-    try {
-      const canvas = await html2canvas(receiptEl, { backgroundColor: "#ffffff", scale: 2 });
-      const blob = await new Promise(function (resolve) {
-        canvas.toBlob(resolve, "image/png");
-      });
-      if (!blob) throw new Error("이미지 생성 실패");
-
-      const header = getHeader();
-      const fileName = "주문서_" + (header.applicant || "신청") + ".png";
-      const file = new File([blob], fileName, { type: "image/png" });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: "주문서", text: "주문 내역 이미지예요." });
-          showNote("공유 창에서 보낼 곳을 선택해 주세요.");
-        } catch (shareError) {
-          if (shareError && shareError.name !== "AbortError") {
-            showNote("공유가 취소됐어요. 아래에서 이미지를 다시 받아 직접 보내 주세요.");
-          }
-        }
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        showNote("이미지 파일이 다운로드됐어요. 원하는 곳으로 보내 주세요.");
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "주문서", text: text });
+        showNote("공유 창에서 보낼 곳을 선택해 주세요.");
+        return;
+      } catch (shareError) {
+        if (shareError && shareError.name === "AbortError") return;
+        // 공유가 안 되면 아래 복사 방식으로 이어감
       }
-    } catch (error) {
-      showNote("이미지를 만드는 중 문제가 생겼어요. 다시 시도해 주세요.");
-    } finally {
-      completeBtn.disabled = false;
-      completeBtn.textContent = "완료";
     }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showNote("주문 내용이 복사됐어요. 카카오톡 등에 붙여넣기(길게 눌러 붙여넣기) 해주세요.");
+        return;
+      } catch (copyError) {
+        // 복사도 안 되면 아래 수동 복사용 칸을 보여줌
+      }
+    }
+
+    showFallbackText(text);
+    showNote("아래 칸의 내용을 선택해서 복사한 뒤, 카카오톡 등에 붙여넣기 해주세요.");
   });
 
   if ("serviceWorker" in navigator) {
