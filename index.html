@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주문서</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b6ef5">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="주문서">
+<style>
+  :root {
+    --bg: #e8f0ff;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --border: #d5dae3;
+    --primary: #3b6ef5;
+    --primary-dark: #2d58cf;
+    --error: #d93636;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    line-height: 1.5;
+  }
+  .card {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 28px 24px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  h1 { margin: 0 0 4px; font-size: 1.5rem; }
+  .desc { margin: 0 0 20px; color: var(--muted); font-size: 0.95rem; }
+
+  .field { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .field label.field-label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 1rem; }
+  .req { color: var(--error); }
+  .field input[type="text"] {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .radio-group input { width: 20px; height: 20px; margin: 0; }
+  #address-field { margin-top: 12px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .row label { font-weight: 600; font-size: 1rem; }
+  .row input[type="number"] {
+    width: 84px;
+    min-height: 44px;
+    padding: 9px 10px;
+    font: inherit;
+    font-size: 1rem;
+    text-align: right;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .variant-block { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .variant-title { font-weight: 600; font-size: 1rem; margin-bottom: 12px; }
+  .variant-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+  }
+  .chip-btn {
+    width: auto;
+    margin: 0;
+    min-height: 40px;
+    padding: 9px 14px;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .chip-btn.active {
+    color: #ffffff;
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .chip-qty {
+    width: 64px;
+    min-height: 40px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 0.95rem;
+    text-align: right;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  input:focus, .chip-btn:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+  .error { min-height: 1.2em; margin: 10px 0 0; color: var(--error); font-size: 0.85rem; }
+
+  button.submit {
+    width: 100%;
+    min-height: 50px;
+    margin-top: 16px;
+    padding: 14px;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--primary);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  button.submit:hover { background: var(--primary-dark); }
+  button.secondary {
+    width: 100%;
+    min-height: 50px;
+    margin-top: 10px;
+    padding: 14px;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--card);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  button.secondary:hover { background: #eef3ff; }
+
+  .hidden { display: none; }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .summary-row .qty { font-weight: 700; }
+  .empty { color: var(--muted); text-align: center; padding: 16px 0; }
+  .note { margin: 14px 0 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
+
+  @media (max-width: 420px) {
+    body { padding: 16px 12px; }
+    .card { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <section id="form-view">
+      <h1>주문서</h1>
+      <p class="desc">주문할 품목에 수량을 입력해 주세요. 필요 없는 품목은 비워 두면 돼요.</p>
+      <form id="form">
+        <div class="field">
+          <label class="field-label" for="applicant">신청자 <span class="req">*</span></label>
+          <input type="text" id="applicant" autocomplete="name">
+          <p class="error" id="applicant-error"></p>
+        </div>
+
+        <div class="field">
+          <label class="field-label">수령방법 <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="receive" value="방문"> 방문</label>
+            <label><input type="radio" name="receive" value="택배"> 택배</label>
+            <label><input type="radio" name="receive" value="용달"> 용달</label>
+          </div>
+          <div id="address-field" class="hidden">
+            <input type="text" id="address" placeholder="주소를 입력해 주세요">
+          </div>
+          <p class="error" id="receive-error"></p>
+        </div>
+
+        <div id="items"></div>
+        <p class="error" id="form-error"></p>
+        <button type="submit" class="submit">신청하기</button>
+      </form>
+    </section>
+
+    <section id="summary-view" class="hidden">
+      <h1>신청한 품목</h1>
+      <p class="desc">신청 내용을 확인해 주세요.</p>
+      <div id="summary-list"></div>
+      <button type="button" id="edit-btn" class="secondary">수정하기</button>
+      <button type="button" id="complete-btn" class="submit">완료</button>
+      <p class="note hidden" id="complete-note">메일 앱이 열렸어요. 거기서 <strong>보내기</strong>를 눌러야 실제로 전달돼요.</p>
+    </section>
+  </main>
+
+<script>
+  const RECEIVER_EMAIL = "jjunnb0328@gmail.com";
+
+  const BUNJUNGI_VARIANTS = ["2구","3구","4구","5구","6구","7구","8구","9구","10구"];
+  const BOILER_VARIANTS = ["2kw","3kw","4.5kw"];
+  const NUMBER_VARIANTS = ["1번","2번","3번","4번","5번","6번","7번"];
+
+  const ITEMS = [
+    { type: "simple", name: "프로모듈판" },
+    { type: "simple", name: "프리미엄 모듈판" },
+    { type: "simple", name: "클레식모듈판" },
+    { type: "simple", name: "플러스모듈판" },
+    { type: "simple", name: "플러스N모듈판" },
+    { type: "simple", name: "방열판" },
+    { type: "simple", name: "70m" },
+    { type: "simple", name: "100m" },
+    { type: "simple", name: "접착재" },
+    { type: "simple", name: "점착재" },
+    { type: "simple", name: "롤러" },
+    { type: "simple", name: "테이프" },
+    { type: "variant", name: "분배기(기름)", variants: BUNJUNGI_VARIANTS },
+    { type: "variant", name: "분배기(가스)", variants: BUNJUNGI_VARIANTS },
+    { type: "variant", name: "분배기(KS)", variants: BUNJUNGI_VARIANTS },
+    { type: "simple", name: "보호판" },
+    { type: "variant", name: "전기보일러", variants: BOILER_VARIANTS },
+    { type: "variant", name: "탄소마루", variants: NUMBER_VARIANTS },
+    { type: "variant", name: "걸레받이", variants: NUMBER_VARIANTS },
+    { type: "variant", name: "마감", variants: NUMBER_VARIANTS },
+    { type: "variant", name: "확장", variants: NUMBER_VARIANTS }
+  ];
+
+  const itemsBox = document.getElementById("items");
+
+  ITEMS.forEach(function (item, itemIndex) {
+    if (item.type === "simple") {
+      const row = document.createElement("div");
+      row.className = "row";
+      const label = document.createElement("label");
+      label.setAttribute("for", "qty-" + itemIndex);
+      label.textContent = item.name;
+      const input = document.createElement("input");
+      input.type = "number";
+      input.id = "qty-" + itemIndex;
+      input.min = "0";
+      input.step = "1";
+      input.placeholder = "0";
+      row.append(label, input);
+      itemsBox.append(row);
+      return;
+    }
+
+    const block = document.createElement("div");
+    block.className = "variant-block";
+    const title = document.createElement("div");
+    title.className = "variant-title";
+    title.textContent = item.name;
+    const grid = document.createElement("div");
+    grid.className = "variant-grid";
+
+    item.variants.forEach(function (variant, variantIndex) {
+      const chip = document.createElement("div");
+      chip.className = "chip";
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip-btn";
+      btn.textContent = variant;
+      btn.id = "variant-btn-" + itemIndex + "-" + variantIndex;
+
+      const qty = document.createElement("input");
+      qty.type = "number";
+      qty.className = "chip-qty hidden";
+      qty.min = "1";
+      qty.step = "1";
+      qty.placeholder = "수량";
+      qty.id = "variant-qty-" + itemIndex + "-" + variantIndex;
+
+      btn.addEventListener("click", function () {
+        const active = btn.classList.toggle("active");
+        qty.classList.toggle("hidden", !active);
+        if (active) {
+          qty.value = "1";
+          qty.focus();
+        } else {
+          qty.value = "";
+        }
+      });
+
+      chip.append(btn, qty);
+      grid.append(chip);
+    });
+
+    block.append(title, grid);
+    itemsBox.append(block);
+  });
+
+  const form = document.getElementById("form");
+  const formView = document.getElementById("form-view");
+  const summaryView = document.getElementById("summary-view");
+  const summaryList = document.getElementById("summary-list");
+  const formError = document.getElementById("form-error");
+  const completeNote = document.getElementById("complete-note");
+  const addressField = document.getElementById("address-field");
+  const addressInput = document.getElementById("address");
+
+  document.querySelectorAll('input[name="receive"]').forEach(function (radio) {
+    radio.addEventListener("change", function () {
+      const needsAddress = radio.value === "택배" || radio.value === "용달";
+      addressField.classList.toggle("hidden", !needsAddress);
+      if (!needsAddress) addressInput.value = "";
+    });
+  });
+
+  function setError(id, message) {
+    document.getElementById(id + "-error").textContent = message;
+  }
+
+  function getHeader() {
+    const applicant = document.getElementById("applicant").value.trim();
+    const receiveInput = document.querySelector('input[name="receive"]:checked');
+    const receive = receiveInput ? receiveInput.value : "";
+    const address = document.getElementById("address").value.trim();
+    return { applicant: applicant, receive: receive, address: address };
+  }
+
+  function validateHeader(header) {
+    const applicantMsg = header.applicant ? "" : "신청자 이름을 입력해 주세요.";
+    let receiveMsg = header.receive ? "" : "수령방법을 선택해 주세요.";
+    if (!receiveMsg && header.receive !== "방문" && !header.address) {
+      receiveMsg = "주소를 입력해 주세요.";
+    }
+    setError("applicant", applicantMsg);
+    setError("receive", receiveMsg);
+    return !(applicantMsg || receiveMsg);
+  }
+
+  function getOrder() {
+    const order = [];
+    ITEMS.forEach(function (item, itemIndex) {
+      if (item.type === "simple") {
+        const value = document.getElementById("qty-" + itemIndex).value.trim();
+        const qty = Number(value);
+        if (qty > 0) order.push({ label: item.name, qty: qty });
+        return;
+      }
+      item.variants.forEach(function (variant, variantIndex) {
+        const btn = document.getElementById("variant-btn-" + itemIndex + "-" + variantIndex);
+        const qtyInput = document.getElementById("variant-qty-" + itemIndex + "-" + variantIndex);
+        const qty = Number(qtyInput.value.trim());
+        if (btn.classList.contains("active") && qty > 0) {
+          order.push({ label: item.name + " " + variant, qty: qty });
+        }
+      });
+    });
+    return order;
+  }
+
+  function headerRows(header) {
+    const rows = [];
+    rows.push({ label: "신청자", value: header.applicant });
+    rows.push({ label: "수령방법", value: header.receive === "방문" ? "방문" : header.receive + " (" + header.address + ")" });
+    return rows;
+  }
+
+  function renderSummary(header, order) {
+    summaryList.textContent = "";
+    headerRows(header).forEach(function (item) {
+      const row = document.createElement("div");
+      row.className = "summary-row";
+      const name = document.createElement("span");
+      name.textContent = item.label;
+      const value = document.createElement("span");
+      value.className = "qty";
+      value.textContent = item.value;
+      row.append(name, value);
+      summaryList.append(row);
+    });
+    if (order.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "신청한 품목이 없어요.";
+      summaryList.append(empty);
+      return;
+    }
+    order.forEach(function (item) {
+      const row = document.createElement("div");
+      row.className = "summary-row";
+      const name = document.createElement("span");
+      name.textContent = item.label;
+      const qty = document.createElement("span");
+      qty.className = "qty";
+      qty.textContent = item.qty + "개";
+      row.append(name, qty);
+      summaryList.append(row);
+    });
+  }
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const header = getHeader();
+    const headerOk = validateHeader(header);
+    const order = getOrder();
+    if (order.length === 0) {
+      formError.textContent = "품목을 하나 이상 입력해 주세요.";
+    } else {
+      formError.textContent = "";
+    }
+    if (!headerOk || order.length === 0) return;
+    completeNote.classList.add("hidden");
+    renderSummary(header, order);
+    formView.classList.add("hidden");
+    summaryView.classList.remove("hidden");
+  });
+
+  document.getElementById("edit-btn").addEventListener("click", function () {
+    completeNote.classList.add("hidden");
+    summaryView.classList.add("hidden");
+    formView.classList.remove("hidden");
+  });
+
+  document.getElementById("complete-btn").addEventListener("click", function () {
+    const header = getHeader();
+    const order = getOrder();
+    const subject = encodeURIComponent("주문서 접수");
+    const headerLines = headerRows(header).map(function (item) {
+      return item.label + ": " + item.value;
+    });
+    const itemLines = order.map(function (item) {
+      return item.label + ": " + item.qty + "개";
+    });
+    const body = encodeURIComponent(headerLines.concat(itemLines).join("\n"));
+    window.location.href = "mailto:" + RECEIVER_EMAIL + "?subject=" + subject + "&body=" + body;
+    completeNote.classList.remove("hidden");
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {
+        // 서비스워커 등록이 안 돼도 폼 자체는 정상 동작함
+      });
+    });
+  }
+</script>
+</body>
+</html>
