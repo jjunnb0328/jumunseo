@@ -44,7 +44,8 @@
   .field { padding: 14px 0; border-bottom: 1px solid var(--border); }
   .field label.field-label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 1rem; }
   .req { color: var(--error); }
-  .field input[type="text"] {
+  .field input[type="text"],
+  .field textarea {
     width: 100%;
     min-height: 46px;
     padding: 12px;
@@ -55,6 +56,7 @@
     border: 1px solid var(--border);
     border-radius: 8px;
   }
+  .field textarea { min-height: 90px; resize: vertical; }
   .radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
   .radio-group label {
     display: flex;
@@ -234,6 +236,12 @@
         </div>
 
         <div id="items"></div>
+
+        <div class="field">
+          <label class="field-label" for="remark">비고</label>
+          <textarea id="remark" rows="3" placeholder="전달하실 내용이 있으면 적어 주세요 (선택)"></textarea>
+        </div>
+
         <p class="error" id="form-error"></p>
         <button type="submit" class="submit">신청하기</button>
       </form>
@@ -252,8 +260,10 @@
 
 <script>
   const BUNJUNGI_VARIANTS = ["2구","3구","4구","5구","6구","7구","8구","9구","10구"];
-  const BOILER_VARIANTS = ["2kw","3kw","4.5kw"];
+  const YEOLSEON_VARIANTS = ["1.5평","2평","3평","온도조절기일반","와이파이","센서","파워"];
+  const BOILER_VARIANTS = ["2kw","3kw","4.5kw","분배기카바","전기보일러 온도조절기","열매체1.5리터"];
   const NUMBER_VARIANTS = ["1번","2번","3번","4번","5번","6번","7번"];
+  const MOLDING_VARIANTS = ["9mm","15mm"];
 
   const ITEMS = [
     { type: "simple", name: "프로모듈판" },
@@ -268,6 +278,7 @@
     { type: "simple", name: "점착재" },
     { type: "simple", name: "롤러" },
     { type: "simple", name: "테이프" },
+    { type: "variant", name: "열선", variants: YEOLSEON_VARIANTS },
     { type: "variant", name: "분배기(기름)", variants: BUNJUNGI_VARIANTS },
     { type: "variant", name: "분배기(가스)", variants: BUNJUNGI_VARIANTS },
     { type: "variant", name: "분배기(KS)", variants: BUNJUNGI_VARIANTS },
@@ -276,7 +287,8 @@
     { type: "variant", name: "탄소마루", variants: NUMBER_VARIANTS },
     { type: "variant", name: "걸레받이", variants: NUMBER_VARIANTS },
     { type: "variant", name: "마감", variants: NUMBER_VARIANTS },
-    { type: "variant", name: "확장", variants: NUMBER_VARIANTS }
+    { type: "variant", name: "확장", variants: NUMBER_VARIANTS },
+    { type: "variant", name: "몰딩", variants: MOLDING_VARIANTS }
   ];
 
   const itemsBox = document.getElementById("items");
@@ -370,7 +382,8 @@
     const receiveInput = document.querySelector('input[name="receive"]:checked');
     const receive = receiveInput ? receiveInput.value : "";
     const address = document.getElementById("address").value.trim();
-    return { applicant: applicant, receive: receive, address: address };
+    const remark = document.getElementById("remark").value.trim();
+    return { applicant: applicant, receive: receive, address: address, remark: remark };
   }
 
   function validateHeader(header) {
@@ -409,6 +422,7 @@
     const rows = [];
     rows.push({ label: "신청자", value: header.applicant });
     rows.push({ label: "수령방법", value: header.receive === "방문" ? "방문" : header.receive + " (" + header.address + ")" });
+    if (header.remark) rows.push({ label: "비고", value: header.remark });
     return rows;
   }
 
