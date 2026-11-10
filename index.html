@@ -261,17 +261,17 @@
 <script>
   const BUNJUNGI_VARIANTS = ["2구","3구","4구","5구","6구","7구","8구","9구","10구"];
   const YEOLSEON_VARIANTS = ["1.5평","2평","3평","온도조절기일반","와이파이","센서","파워"];
-  const BOILER_VARIANTS = ["2kw","3kw","4.5kw","분배기카바","전기보일러 온도조절기","열매체1.5리터"];
+  const BOILER_VARIANTS = ["2kw","3kw","4.5kw","분배기카바","전기보일러 온도조절기","열매체1.5리터","공바2구","공바3구"];
   const NUMBER_VARIANTS = ["1번","2번","3번","4번","5번","6번","7번"];
   const MOLDING_VARIANTS = ["9mm","15mm"];
 
   const ITEMS = [
-    { type: "simple", name: "프로모듈판" },
-    { type: "simple", name: "프리미엄 모듈판" },
-    { type: "simple", name: "클레식모듈판" },
-    { type: "simple", name: "플러스모듈판" },
-    { type: "simple", name: "플러스N모듈판" },
-    { type: "simple", name: "방열판" },
+    { type: "simple", name: "프로모듈판", unit: "평" },
+    { type: "simple", name: "프리미엄 모듈판", unit: "평" },
+    { type: "simple", name: "클레식모듈판", unit: "평" },
+    { type: "simple", name: "플러스모듈판", unit: "평" },
+    { type: "simple", name: "플러스N모듈판", unit: "평" },
+    { type: "simple", name: "방열판(아연)", unit: "평" },
     { type: "simple", name: "70m" },
     { type: "simple", name: "100m" },
     { type: "simple", name: "접착재" },
@@ -284,7 +284,7 @@
     { type: "variant", name: "분배기(KS)", variants: BUNJUNGI_VARIANTS },
     { type: "simple", name: "보호판" },
     { type: "variant", name: "전기보일러", variants: BOILER_VARIANTS },
-    { type: "variant", name: "탄소마루", variants: NUMBER_VARIANTS },
+    { type: "variant", name: "탄소마루", variants: NUMBER_VARIANTS, unit: "BOX" },
     { type: "variant", name: "걸레받이", variants: NUMBER_VARIANTS },
     { type: "variant", name: "마감", variants: NUMBER_VARIANTS },
     { type: "variant", name: "확장", variants: NUMBER_VARIANTS },
@@ -400,10 +400,11 @@
   function getOrder() {
     const order = [];
     ITEMS.forEach(function (item, itemIndex) {
+      const unit = item.unit || "개";
       if (item.type === "simple") {
         const value = document.getElementById("qty-" + itemIndex).value.trim();
         const qty = Number(value);
-        if (qty > 0) order.push({ label: item.name, qty: qty });
+        if (qty > 0) order.push({ label: item.name, qty: qty, unit: unit });
         return;
       }
       item.variants.forEach(function (variant, variantIndex) {
@@ -411,7 +412,7 @@
         const qtyInput = document.getElementById("variant-qty-" + itemIndex + "-" + variantIndex);
         const qty = Number(qtyInput.value.trim());
         if (btn.classList.contains("active") && qty > 0) {
-          order.push({ label: item.name + " " + variant, qty: qty });
+          order.push({ label: item.name + " " + variant, qty: qty, unit: unit });
         }
       });
     });
@@ -453,7 +454,7 @@
       name.textContent = item.label;
       const qty = document.createElement("span");
       qty.className = "qty";
-      qty.textContent = item.qty + "개";
+      qty.textContent = item.qty + item.unit;
       row.append(name, qty);
       summaryList.append(row);
     });
@@ -496,7 +497,7 @@
       return item.label + ": " + item.value;
     });
     const itemLines = order.map(function (item) {
-      return item.label + ": " + item.qty + "개";
+      return item.label + ": " + item.qty + item.unit;
     });
     return ["[주문서]"].concat(headerLines).concat(itemLines).join("\n");
   }
